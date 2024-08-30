@@ -72,7 +72,7 @@ const ChatRoom = () => {
             <Whiteboard roomId={roomId} username={username} />
           </div>
         )}
-        <Button onClick={toggleWhiteboard} className="mt-2">
+        <Button onClick={toggleWhiteboard} className="mt-2 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">
           {showWhiteboard ? 'Hide Whiteboard' : 'Use Whiteboard'}
         </Button>
       </div>

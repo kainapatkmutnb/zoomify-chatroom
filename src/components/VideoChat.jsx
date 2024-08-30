@@ -43,12 +43,6 @@ const VideoChat = ({ roomId }) => {
     }
   };
 
-  useEffect(() => {
-    if (isCallStarted && (selectedVideoDevice || selectedAudioDevice)) {
-      startStream();
-    }
-  }, [selectedVideoDevice, selectedAudioDevice, isCallStarted]);
-
   const createPeer = (partnerID, stream) => {
     const peer = new Peer({
       initiator: true,
@@ -96,10 +90,10 @@ const VideoChat = ({ roomId }) => {
   return (
     <div className="video-chat">
       {!isCallStarted ? (
-        <Button onClick={startStream} className="mb-4">Start Call</Button>
+        <Button onClick={startStream} className="mb-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Start Call</Button>
       ) : (
         <>
-          <video playsInline muted ref={userVideo} autoPlay className="w-full h-auto mb-4" />
+          <video playsInline muted ref={userVideo} autoPlay className="w-full h-auto mb-4 rounded-lg shadow-lg" />
           {peers.map((peer, index) => (
             <PeerVideo key={index} peer={peer} />
           ))}
@@ -128,11 +122,17 @@ const VideoChat = ({ roomId }) => {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={toggleCamera} variant="outline" size="icon">
-              {isCameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+            <Button 
+              onClick={toggleCamera} 
+              className={`p-2 rounded-full ${isCameraOn ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'} text-white`}
+            >
+              {isCameraOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
             </Button>
-            <Button onClick={toggleMic} variant="outline" size="icon">
-              {isMicOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+            <Button 
+              onClick={toggleMic} 
+              className={`p-2 rounded-full ${isMicOn ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'} text-white`}
+            >
+              {isMicOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
             </Button>
           </div>
         </>
