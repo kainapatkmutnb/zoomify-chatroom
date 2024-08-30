@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import VideoChat from './VideoChat';
 import Whiteboard from './Whiteboard';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const ChatRoom = () => {
   const { roomId } = useParams();
@@ -11,6 +12,7 @@ const ChatRoom = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [users, setUsers] = useState([]);
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
   const messagesEndRef = useRef(null);
   const username = location.state?.username;
 
@@ -51,6 +53,10 @@ const ChatRoom = () => {
     navigate('/');
   };
 
+  const toggleWhiteboard = () => {
+    setShowWhiteboard(!showWhiteboard);
+  };
+
   if (!username) {
     return null; // or a loading spinner
   }
@@ -61,16 +67,21 @@ const ChatRoom = () => {
         <div className="flex-grow">
           <VideoChat roomId={roomId} username={username} />
         </div>
-        <div className="h-1/3">
-          <Whiteboard roomId={roomId} username={username} />
-        </div>
+        {showWhiteboard && (
+          <div className="h-1/3">
+            <Whiteboard roomId={roomId} username={username} />
+          </div>
+        )}
+        <Button onClick={toggleWhiteboard} className="mt-2">
+          {showWhiteboard ? 'Hide Whiteboard' : 'Use Whiteboard'}
+        </Button>
       </div>
-      <div className="w-1/4 flex flex-col">
+      <div className="w-1/4 flex flex-col p-4 border-l">
         <h2 className="text-2xl font-bold mb-4">Room: {roomId}</h2>
         <div className="flex-grow bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-4 overflow-y-auto">
           {messages.map((msg, index) => (
             <div key={index} className={`mb-2 ${msg.type === 'system' ? 'text-gray-500' : ''}`}>
-              <span className="text-xs text-gray-400">{msg.timestamp.toLocaleTimeString('en-US', { hour12: false })}</span>
+              <span className="text-xs text-gray-400">{msg.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}</span>
               {msg.type === 'user' && <span className="font-bold ml-2">{msg.sender}:</span>}
               <span className="ml-2">{msg.text}</span>
             </div>
@@ -78,11 +89,11 @@ const ChatRoom = () => {
           <div ref={messagesEndRef} />
         </div>
         <form onSubmit={handleSendMessage} className="flex mb-2">
-          <input
+          <Input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            className="flex-grow mr-2 p-2 border rounded"
+            className="flex-grow mr-2"
             placeholder="Type a message..."
           />
           <Button type="submit">Send</Button>

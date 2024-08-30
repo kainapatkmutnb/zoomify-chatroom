@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Video, VideoOff, Mic, MicOff } from 'lucide-react';
 
 const VideoChat = ({ roomId }) => {
   const [stream, setStream] = useState(null);
@@ -11,12 +13,12 @@ const VideoChat = ({ roomId }) => {
   const [audioDevices, setAudioDevices] = useState([]);
   const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
   const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
+  const [isCallStarted, setIsCallStarted] = useState(false);
   const userVideo = useRef();
   const peersRef = useRef([]);
 
   useEffect(() => {
     getDevices();
-    startStream();
   }, []);
 
   const getDevices = async () => {
@@ -35,16 +37,17 @@ const VideoChat = ({ roomId }) => {
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(newStream);
       userVideo.current.srcObject = newStream;
+      setIsCallStarted(true);
     } catch (err) {
       console.error("Error accessing media devices:", err);
     }
   };
 
   useEffect(() => {
-    if (selectedVideoDevice || selectedAudioDevice) {
+    if (isCallStarted && (selectedVideoDevice || selectedAudioDevice)) {
       startStream();
     }
-  }, [selectedVideoDevice, selectedAudioDevice]);
+  }, [selectedVideoDevice, selectedAudioDevice, isCallStarted]);
 
   const createPeer = (partnerID, stream) => {
     const peer = new Peer({
@@ -92,42 +95,48 @@ const VideoChat = ({ roomId }) => {
 
   return (
     <div className="video-chat">
-      <video playsInline muted ref={userVideo} autoPlay />
-      {peers.map((peer, index) => (
-        <Video key={index} peer={peer} />
-      ))}
-      <div className="controls">
-        <Select onValueChange={(value) => setSelectedVideoDevice(value)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select camera" />
-          </SelectTrigger>
-          <SelectContent>
-            {videoDevices.map((device) => (
-              <SelectItem key={device.deviceId} value={device.deviceId}>
-                {device.label || `Camera ${device.deviceId.substr(0, 5)}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select onValueChange={(value) => setSelectedAudioDevice(value)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select microphone" />
-          </SelectTrigger>
-          <SelectContent>
-            {audioDevices.map((device) => (
-              <SelectItem key={device.deviceId} value={device.deviceId}>
-                {device.label || `Microphone ${device.deviceId.substr(0, 5)}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <button onClick={toggleCamera}>
-          {isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
-        </button>
-        <button onClick={toggleMic}>
-          {isMicOn ? 'Turn Mic Off' : 'Turn Mic On'}
-        </button>
-      </div>
+      {!isCallStarted ? (
+        <Button onClick={startStream} className="mb-4">Start Call</Button>
+      ) : (
+        <>
+          <video playsInline muted ref={userVideo} autoPlay className="w-full h-auto mb-4" />
+          {peers.map((peer, index) => (
+            <Video key={index} peer={peer} />
+          ))}
+          <div className="controls flex space-x-2 mb-4">
+            <Select onValueChange={(value) => setSelectedVideoDevice(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select camera" />
+              </SelectTrigger>
+              <SelectContent>
+                {videoDevices.map((device) => (
+                  <SelectItem key={device.deviceId} value={device.deviceId}>
+                    {device.label || `Camera ${device.deviceId.substr(0, 5)}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select onValueChange={(value) => setSelectedAudioDevice(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select microphone" />
+              </SelectTrigger>
+              <SelectContent>
+                {audioDevices.map((device) => (
+                  <SelectItem key={device.deviceId} value={device.deviceId}>
+                    {device.label || `Microphone ${device.deviceId.substr(0, 5)}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={toggleCamera} variant="outline" size="icon">
+              {isCameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+            </Button>
+            <Button onClick={toggleMic} variant="outline" size="icon">
+              {isMicOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -141,7 +150,7 @@ const Video = ({ peer }) => {
     });
   }, [peer]);
 
-  return <video playsInline autoPlay ref={ref} />;
+  return <video playsInline autoPlay ref={ref} className="w-full h-auto mb-4" />;
 };
 
 export default VideoChat;
