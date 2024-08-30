@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import VideoChat from './VideoChat';
 import Whiteboard from './Whiteboard';
+import { Button } from "@/components/ui/button";
 
 const ChatRoom = () => {
   const { roomId } = useParams();
@@ -46,37 +47,47 @@ const ChatRoom = () => {
     }
   };
 
+  const handleLeaveRoom = () => {
+    navigate('/');
+  };
+
   if (!username) {
     return null; // or a loading spinner
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <h2 className="text-2xl font-bold mb-4">Room: {roomId}</h2>
-      <div className="flex-grow flex">
-        <div className="w-3/4 pr-4">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-4 h-96 overflow-y-auto">
-            {messages.map((msg, index) => (
-              <div key={index} className={`mb-2 ${msg.type === 'system' ? 'text-gray-500' : ''}`}>
-                <span className="text-xs text-gray-400">{msg.timestamp.toLocaleTimeString()}</span>
-                {msg.type === 'user' && <span className="font-bold ml-2">{msg.sender}:</span>}
-                <span className="ml-2">{msg.text}</span>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-          <form onSubmit={handleSendMessage} className="flex">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              className="flex-grow mr-2 p-2 border rounded"
-              placeholder="Type a message..."
-            />
-            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Send</button>
-          </form>
+    <div className="flex h-screen">
+      <div className="w-3/4 flex flex-col">
+        <div className="flex-grow">
+          <VideoChat roomId={roomId} username={username} />
         </div>
-        <div className="w-1/4">
+        <div className="h-1/3">
+          <Whiteboard roomId={roomId} username={username} />
+        </div>
+      </div>
+      <div className="w-1/4 flex flex-col">
+        <h2 className="text-2xl font-bold mb-4">Room: {roomId}</h2>
+        <div className="flex-grow bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-4 overflow-y-auto">
+          {messages.map((msg, index) => (
+            <div key={index} className={`mb-2 ${msg.type === 'system' ? 'text-gray-500' : ''}`}>
+              <span className="text-xs text-gray-400">{msg.timestamp.toLocaleTimeString('en-US', { hour12: false })}</span>
+              {msg.type === 'user' && <span className="font-bold ml-2">{msg.sender}:</span>}
+              <span className="ml-2">{msg.text}</span>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+        <form onSubmit={handleSendMessage} className="flex mb-2">
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            className="flex-grow mr-2 p-2 border rounded"
+            placeholder="Type a message..."
+          />
+          <Button type="submit">Send</Button>
+        </form>
+        <div className="mb-4">
           <h3 className="text-xl font-semibold mb-2">Users in Room</h3>
           <ul>
             {users.map((user, index) => (
@@ -84,12 +95,7 @@ const ChatRoom = () => {
             ))}
           </ul>
         </div>
-      </div>
-      <div className="mt-4">
-        <VideoChat roomId={roomId} username={username} />
-      </div>
-      <div className="mt-4">
-        <Whiteboard roomId={roomId} username={username} />
+        <Button onClick={handleLeaveRoom} variant="destructive">Leave Room</Button>
       </div>
     </div>
   );
