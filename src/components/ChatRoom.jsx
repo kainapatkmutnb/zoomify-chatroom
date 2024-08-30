@@ -1,30 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import VideoChat from './VideoChat';
 import Whiteboard from './Whiteboard';
 
 const ChatRoom = () => {
   const { roomId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [users, setUsers] = useState([]);
   const messagesEndRef = useRef(null);
+  const username = location.state?.username;
 
   useEffect(() => {
-    // Here you would typically connect to your real-time backend (e.g., WebSocket)
-    // For this example, we'll simulate joining a room
-    const username = prompt("Enter your username:");
-    if (username) {
-      setUsers(prevUsers => [...prevUsers, username]);
-      addSystemMessage(`${username} joined the room`);
+    if (!username) {
+      navigate('/');
+      return;
     }
+
+    // Here you would typically connect to your real-time backend (e.g., WebSocket)
+    setUsers(prevUsers => [...prevUsers, username]);
+    addSystemMessage(`${username} joined the room`);
 
     return () => {
       // Cleanup: remove user when component unmounts (user leaves room)
       setUsers(prevUsers => prevUsers.filter(user => user !== username));
       addSystemMessage(`${username} left the room`);
     };
-  }, []);
+  }, [username, navigate]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,10 +41,14 @@ const ChatRoom = () => {
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (inputMessage.trim()) {
-      setMessages(prevMessages => [...prevMessages, { type: 'user', text: inputMessage, timestamp: new Date() }]);
+      setMessages(prevMessages => [...prevMessages, { type: 'user', sender: username, text: inputMessage, timestamp: new Date() }]);
       setInputMessage('');
     }
   };
+
+  if (!username) {
+    return null; // or a loading spinner
+  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -51,6 +59,7 @@ const ChatRoom = () => {
             {messages.map((msg, index) => (
               <div key={index} className={`mb-2 ${msg.type === 'system' ? 'text-gray-500' : ''}`}>
                 <span className="text-xs text-gray-400">{msg.timestamp.toLocaleTimeString()}</span>
+                {msg.type === 'user' && <span className="font-bold ml-2">{msg.sender}:</span>}
                 <span className="ml-2">{msg.text}</span>
               </div>
             ))}
@@ -77,10 +86,10 @@ const ChatRoom = () => {
         </div>
       </div>
       <div className="mt-4">
-        <VideoChat roomId={roomId} />
+        <VideoChat roomId={roomId} username={username} />
       </div>
       <div className="mt-4">
-        <Whiteboard roomId={roomId} />
+        <Whiteboard roomId={roomId} username={username} />
       </div>
     </div>
   );
