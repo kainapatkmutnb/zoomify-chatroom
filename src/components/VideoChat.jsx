@@ -1,24 +1,50 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const VideoChat = ({ roomId }) => {
   const [stream, setStream] = useState(null);
   const [peers, setPeers] = useState([]);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
+  const [videoDevices, setVideoDevices] = useState([]);
+  const [audioDevices, setAudioDevices] = useState([]);
+  const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
+  const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
   const userVideo = useRef();
   const peersRef = useRef([]);
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then(stream => {
-        setStream(stream);
-        userVideo.current.srcObject = stream;
-      });
-
-    // Here you would typically connect to your signaling server
-    // and handle room joining logic
+    getDevices();
+    startStream();
   }, []);
+
+  const getDevices = async () => {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    setVideoDevices(devices.filter(device => device.kind === 'videoinput'));
+    setAudioDevices(devices.filter(device => device.kind === 'audioinput'));
+  };
+
+  const startStream = async () => {
+    const constraints = {
+      video: selectedVideoDevice ? { deviceId: { exact: selectedVideoDevice } } : true,
+      audio: selectedAudioDevice ? { deviceId: { exact: selectedAudioDevice } } : true,
+    };
+
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      setStream(newStream);
+      userVideo.current.srcObject = newStream;
+    } catch (err) {
+      console.error("Error accessing media devices:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedVideoDevice || selectedAudioDevice) {
+      startStream();
+    }
+  }, [selectedVideoDevice, selectedAudioDevice]);
 
   const createPeer = (partnerID, stream) => {
     const peer = new Peer({
@@ -71,6 +97,30 @@ const VideoChat = ({ roomId }) => {
         <Video key={index} peer={peer} />
       ))}
       <div className="controls">
+        <Select onValueChange={(value) => setSelectedVideoDevice(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select camera" />
+          </SelectTrigger>
+          <SelectContent>
+            {videoDevices.map((device) => (
+              <SelectItem key={device.deviceId} value={device.deviceId}>
+                {device.label || `Camera ${device.deviceId.substr(0, 5)}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select onValueChange={(value) => setSelectedAudioDevice(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select microphone" />
+          </SelectTrigger>
+          <SelectContent>
+            {audioDevices.map((device) => (
+              <SelectItem key={device.deviceId} value={device.deviceId}>
+                {device.label || `Microphone ${device.deviceId.substr(0, 5)}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <button onClick={toggleCamera}>
           {isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
         </button>
