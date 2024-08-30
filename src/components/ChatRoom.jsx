@@ -77,7 +77,7 @@ const ChatRoom = () => {
         </Button>
       </div>
       <div className="w-1/4 flex flex-col p-4 border-l">
-        <h2 className="text-2xl font-bold mb-4">Room: {roomId}</h2>
+        <h2 className="text-2xl font-bold mb-4">Chat Room: {roomId}</h2>
         <div className="flex-grow bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-4 overflow-y-auto">
           {messages.map((msg, index) => (
             <div key={index} className={`mb-2 ${msg.type === 'system' ? 'text-gray-500' : ''}`}>
