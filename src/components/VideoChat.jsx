@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Video, VideoOff, Mic, MicOff } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, PhoneOff } from 'lucide-react';
 
-const VideoChat = ({ roomId }) => {
+const VideoChat = ({ roomId, onEndCall }) => {
   const [stream, setStream] = useState(null);
   const [peers, setPeers] = useState([]);
   const [isCameraOn, setIsCameraOn] = useState(true);
@@ -36,7 +36,9 @@ const VideoChat = ({ roomId }) => {
     try {
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(newStream);
-      userVideo.current.srcObject = newStream;
+      if (userVideo.current) {
+        userVideo.current.srcObject = newStream;
+      }
       setIsCallStarted(true);
     } catch (err) {
       console.error("Error accessing media devices:", err);
@@ -87,6 +89,15 @@ const VideoChat = ({ roomId }) => {
     }
   };
 
+  const endCall = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setStream(null);
+    setIsCallStarted(false);
+    onEndCall();
+  };
+
   return (
     <div className="video-chat">
       {!isCallStarted ? (
@@ -133,6 +144,12 @@ const VideoChat = ({ roomId }) => {
               className={`p-2 rounded-full ${isMicOn ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'} text-white`}
             >
               {isMicOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+            </Button>
+            <Button 
+              onClick={endCall} 
+              className="p-2 rounded-full bg-red-500 hover:bg-red-600 text-white"
+            >
+              <PhoneOff className="h-5 w-5" />
             </Button>
           </div>
         </>
