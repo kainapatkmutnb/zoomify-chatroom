@@ -101,7 +101,7 @@ const VideoChat = ({ roomId }) => {
         <>
           <video playsInline muted ref={userVideo} autoPlay className="w-full h-auto mb-4" />
           {peers.map((peer, index) => (
-            <Video key={index} peer={peer} />
+            <PeerVideo key={index} peer={peer} />
           ))}
           <div className="controls flex space-x-2 mb-4">
             <Select onValueChange={(value) => setSelectedVideoDevice(value)}>
@@ -141,7 +141,7 @@ const VideoChat = ({ roomId }) => {
   );
 };
 
-const Video = ({ peer }) => {
+const PeerVideo = ({ peer }) => {
   const ref = useRef();
 
   useEffect(() => {
